@@ -637,6 +637,7 @@ testing
 
 This is simple, scalable, and used in many companies.
 
+### git clone once on the home system ###
 
 Since you already have the project on your **office system** and want to work on the same project from your **home system**, you only need `git clone` **once on the home system**.
 
@@ -646,8 +647,6 @@ Repository:
 https://github.com/Jaswanth-1998/ModeAlpha.git
 ```
 -----------------------------------------------------------------------------------------------------------------------------------------------
-
-### git clone once on the home system ###
 
 # First Time Setup on Home System
 

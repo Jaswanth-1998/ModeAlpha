@@ -1,12 +1,17 @@
 from datetime import datetime
 from time import time
 
+from sqlalchemy import or_
 from flask import session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.extensions import db
 from app.models.user import User
 from app.utils.helpers import normalize_email, normalize_mobile
+
+
+ACTIVE_DELETE_FLAG = "N"
+DELETED_DELETE_FLAG = "Y"
 
 
 def register_user(form_data):
@@ -22,11 +27,11 @@ def register_user(form_data):
     if len(password) < 6:
         raise ValueError("Password must be at least 6 characters long.")
 
-    existing_user = User.query.filter(
-        (User.username == username) | (User.email == email)
-    ).first()
-    if existing_user:
-        raise ValueError("Username or email already exists.")
+    _raise_if_user_conflicts(
+        username=username,
+        email=email,
+        mobile_number=mobile_number,
+    )
 
     try:
         date_of_birth = datetime.strptime(date_of_birth_raw, "%Y-%m-%d").date()
@@ -42,7 +47,7 @@ def register_user(form_data):
         role="user",
         is_approved=False,
         is_active=True,
-        delete_flag="N",
+        delete_flag=ACTIVE_DELETE_FLAG,
     )
     db.session.add(user)
     db.session.commit()
@@ -54,14 +59,19 @@ def authenticate_user(login_identifier, password):
     if not identifier or not password:
         raise ValueError("Username/email and password are required.")
 
-    user = User.query.filter(
-        (User.username == identifier) | (User.email == normalize_email(identifier))
-    ).first()
+    user = (
+        User.query.filter(User.delete_flag != DELETED_DELETE_FLAG)
+        .filter(
+            (User.username == identifier)
+            | (User.email == normalize_email(identifier))
+        )
+        .first()
+    )
 
     if not user or not check_password_hash(user.password_hash, password):
         raise ValueError("Invalid login credentials.")
 
-    if user.delete_flag == "Y":
+    if user.delete_flag == DELETED_DELETE_FLAG:
         raise ValueError("This account has been deleted. Please contact the admin.")
 
     if not user.is_active:
@@ -96,11 +106,13 @@ def update_profile(user, form_data):
     if not all([username, email, mobile_number, date_of_birth_raw]):
         raise ValueError("All profile fields are required.")
 
-    conflicting_user = User.query.filter(
-        ((User.username == username) | (User.email == email)) & (User.id != user.id)
-    ).first()
-    if conflicting_user:
-        raise ValueError("Username or email is already being used by another account.")
+    _raise_if_user_conflicts(
+        username=username,
+        email=email,
+        mobile_number=mobile_number,
+        exclude_user_id=user.id,
+        duplicate_context="profile",
+    )
 
     try:
         user.date_of_birth = datetime.strptime(date_of_birth_raw, "%Y-%m-%d").date()
@@ -125,3 +137,42 @@ def update_profile(user, form_data):
 
     db.session.commit()
     return user
+
+
+def _raise_if_user_conflicts(
+    username=None,
+    email=None,
+    mobile_number=None,
+    exclude_user_id=None,
+    duplicate_context="registration",
+):
+    filters = []
+    if username:
+        filters.append(User.username == username)
+    if email:
+        filters.append(User.email == email)
+    if mobile_number:
+        filters.append(User.mobile_number == mobile_number)
+
+    if not filters:
+        return
+
+    query = User.query.filter(User.delete_flag != DELETED_DELETE_FLAG).filter(or_(*filters))
+    if exclude_user_id is not None:
+        query = query.filter(User.id != exclude_user_id)
+
+    for existing_user in query.all():
+        if email and existing_user.email == email:
+            if duplicate_context == "profile":
+                raise ValueError("Email ID is already being used by another account.")
+            raise ValueError("Email ID is already registered.")
+
+        if mobile_number and existing_user.mobile_number == mobile_number:
+            if duplicate_context == "profile":
+                raise ValueError("Mobile number is already being used by another account.")
+            raise ValueError("Mobile number is already registered.")
+
+        if username and existing_user.username == username:
+            if duplicate_context == "profile":
+                raise ValueError("Username is already being used by another account.")
+            raise ValueError("Username is already registered.")

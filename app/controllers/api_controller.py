@@ -1,6 +1,10 @@
 from flask import g, jsonify, request, url_for
 
-from app.services.admin_service import approve_user_account, get_admin_dashboard_data
+from app.services.admin_service import (
+    approve_user_account,
+    get_admin_dashboard_data,
+    reject_user_account,
+)
 from app.services.mock_test_service import (
     save_answer_for_attempt,
     submit_attempt_for_user,
@@ -21,6 +25,21 @@ def approve_user(user_id):
     except ValueError as exc:
         return jsonify({"success": False, "message": str(exc)}), 400
 
+
+def reject_user(user_id):
+    try:
+        user = reject_user_account(user_id)
+        return jsonify(
+            {
+                "success": True,
+                "message": f"{user.username} registration rejected successfully.",
+                "user_id": user.id,
+            }
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc)}), 400
+
+
 def admin_dashboard_analytics():
     data = get_admin_dashboard_data()
     return jsonify(
@@ -35,6 +54,7 @@ def admin_dashboard_analytics():
         }
     )
 
+
 def user_dashboard_metrics():
     data = get_user_dashboard_data(g.current_user.id)
     return jsonify(
@@ -47,6 +67,7 @@ def user_dashboard_metrics():
             },
         }
     )
+
 
 def save_answer(attempt_id):
     payload = request.get_json(silent=True) or {}
@@ -66,6 +87,7 @@ def save_answer(attempt_id):
         )
     except ValueError as exc:
         return jsonify({"success": False, "message": str(exc)}), 400
+
 
 def submit_attempt(attempt_id):
     try:
