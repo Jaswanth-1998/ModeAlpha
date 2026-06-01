@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% set page_title = "User Dashboard" %}
+
+{% block title %}Mock-Test | User Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="section-title mb-1">Your Learning Dashboard</h2>
+        <p class="text-muted mb-0">Review available exams, submitted results, and current performance trends.</p>
+    </div>
+    <button
+        class="btn btn-outline-dark js-refresh-user-metrics"
+        data-metrics-url="{{ url_for('api.user_dashboard_metrics') }}"
+    >
+        <i class="bi bi-arrow-repeat me-2"></i>Refresh Metrics
+    </button>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <small>Total Available Tests</small>
+            <h3 data-user-metric="available_tests">{{ data.total_available_tests }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-two">
+            <small>Attended Tests</small>
+            <h3 data-user-metric="attended_tests">{{ data.attended_tests }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-three">
+            <small>Average Marks</small>
+            <h3 data-user-metric="average_marks">{{ data.average_marks }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-four">
+            <small>Latest Result</small>
+            <h3>{{ data.latest_result.obtained_marks if data.latest_result else 0 }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">Recent Results</h2>
+            <p class="text-muted mb-0">A quick snapshot of your latest submitted mock tests.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Test</th>
+                        <th>Marks</th>
+                        <th>Percentage</th>
+                        <th>Submitted At</th>
+                        <th class="text-end">View</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in data.recent_results %}
+                        <tr>
+                            <td>{{ result.mock_test.title }}</td>
+                            <td>{{ result.obtained_marks }} / {{ result.total_marks }}</td>
+                            <td>{{ result.percentage }}%</td>
+                            <td>{{ result.created_at.strftime('%d %b %Y %I:%M %p') }}</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('user.result_detail', result_id=result.id) }}" class="btn btn-sm btn-outline-dark">Open</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No results yet. Start a test to see your progress.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = data.recent_results_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

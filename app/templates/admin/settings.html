@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% set page_title = "Settings" %}
+
+{% block title %}Mock-Test | Settings{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="section-title mb-1">User Settings</h2>
+        <p class="text-muted mb-0">Search users by username, email, or mobile number to activate, deactivate, or mark them as deleted.</p>
+    </div>
+    <span class="status-pill">Delete flag is stored as Y/N</span>
+</div>
+
+<div class="panel-card mb-4">
+    <div class="panel-card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-8">
+                <label class="form-label">User name / Email ID / User number</label>
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ search_term }}"
+                    class="form-control"
+                    placeholder="Search by username, email, or mobile number"
+                >
+            </div>
+            <div class="col-lg-4 d-flex gap-2">
+                <button type="submit" class="btn btn-brand">Search</button>
+                <a href="{{ url_for('admin.settings') }}" class="btn btn-light border">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">User Access Control</h2>
+            <p class="text-muted mb-0">Approved users are active by default. Deleting a user only updates the delete flag in the database.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User Name</th>
+                        <th>Email ID</th>
+                        <th>User Number</th>
+                        <th>Approval</th>
+                        <th>Status</th>
+                        <th>Delete Flag</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in managed_users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.mobile_number }}</td>
+                            <td>
+                                <span class="status-pill {{ 'approved' if user.is_approved else 'pending' }}">
+                                    {{ 'Approved' if user.is_approved else 'Pending' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if user.delete_flag == 'Y' %}
+                                    <span class="status-pill pending">Deleted</span>
+                                {% elif user.is_active %}
+                                    <span class="status-pill approved">Active</span>
+                                {% else %}
+                                    <span class="status-pill pending">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.delete_flag }}</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                    {% if user.delete_flag != 'Y' %}
+                                        {% if user.is_active %}
+                                            <form method="post" action="{{ url_for('admin.deactivate_user', user_id=user.id) }}" data-confirm-message="Deactivate this user account?">
+                                                <input type="hidden" name="search" value="{{ search_term }}">
+                                                <input type="hidden" name="page" value="{{ users_pagination.page }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">Deactivate</button>
+                                            </form>
+                                        {% else %}
+                                            <form method="post" action="{{ url_for('admin.activate_user', user_id=user.id) }}" data-confirm-message="Activate this user account?">
+                                                <input type="hidden" name="search" value="{{ search_term }}">
+                                                <input type="hidden" name="page" value="{{ users_pagination.page }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                                            </form>
+                                        {% endif %}
+                                        <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" data-confirm-message="Mark this user as deleted?">
+                                            <input type="hidden" name="search" value="{{ search_term }}">
+                                            <input type="hidden" name="page" value="{{ users_pagination.page }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="status-pill pending">Recorded as deleted</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No matching users found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = users_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

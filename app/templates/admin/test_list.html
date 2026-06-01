@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% set page_title = "Mock Tests" %}
+
+{% block title %}Mock-Test | Mock Tests{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="section-title mb-1">Mock Test Library</h2>
+        <p class="text-muted mb-0">Create, update, soft-delete, and populate tests with imported questions.</p>
+    </div>
+    <a href="{{ url_for('admin.create_test') }}" class="btn btn-brand">
+        <i class="bi bi-plus-circle me-2"></i>Create Mock Test
+    </a>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Questions</th>
+                        <th>Time Limit</th>
+                        <th>Marks / Question</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ test.title }}</div>
+                                <small class="text-muted">{{ test.description[:75] }}{% if test.description|length > 75 %}...{% endif %}</small>
+                            </td>
+                            <td>{{ test.total_questions }}</td>
+                            <td>{{ test.time_limit_minutes }} mins</td>
+                            <td>{{ test.marks_per_question }}</td>
+                            <td>
+                                <span class="status-pill {{ 'approved' if test.is_active else 'pending' }}">
+                                    {{ 'Active' if test.is_active else 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                    <a href="{{ url_for('admin.upload_questions', test_id=test.id) }}" class="btn btn-sm btn-outline-primary">Upload Questions</a>
+                                    <a href="{{ url_for('admin.edit_test', test_id=test.id) }}" class="btn btn-sm btn-outline-dark">Edit</a>
+                                    <form method="post" action="{{ url_for('admin.delete_test', test_id=test.id) }}" data-confirm-message="Mark this test as deleted and hide it from the library?">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No mock tests have been created yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = tests_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

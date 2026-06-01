@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% set page_title = "Pending User Approvals" %}
+
+{% block title %}Mock-Test | Pending Users{% endblock %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">Registered Users Awaiting Approval</h2>
+            <p class="text-muted mb-0">Approve users to allow them to log in and attend mock tests.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Date of Birth</th>
+                        <th>Registered On</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr id="user-row-{{ user.id }}">
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.mobile_number }}</td>
+                            <td>{{ user.date_of_birth.strftime('%d %b %Y') }}</td>
+                            <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
+                            <td class="text-end">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-brand js-approve-user"
+                                    data-url="{{ url_for('api.approve_user_api', user_id=user.id) }}"
+                                    data-row-id="user-row-{{ user.id }}"
+                                    data-confirm-message="Approve this user and allow login access?"
+                                >
+                                    Approve
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">There are no pending approvals.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = users_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

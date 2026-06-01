@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% set page_title = mock_test.title %}
+
+{% block title %}Mock-Test | {{ mock_test.title }}{% endblock %}
+
+{% block content %}
+<section
+    class="test-engine"
+    data-test-engine="true"
+    data-save-answer-url="{{ url_for('api.save_answer', attempt_id=attempt.id) }}"
+    data-submit-url="{{ url_for('api.submit_attempt_api', attempt_id=attempt.id) }}"
+    data-time-left="{{ remaining_seconds }}"
+    data-question-id="{{ question.id }}"
+>
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="panel-card mb-4">
+                <div class="panel-card-header">
+                    <div>
+                        <h2 class="h5 mb-1">{{ mock_test.title }}</h2>
+                        <p class="text-muted mb-0">Question {{ question_number }} of {{ total_questions }}</p>
+                    </div>
+                    <div class="timer-chip" id="timerDisplay">
+                        <i class="bi bi-stopwatch"></i>
+                        <span>00:00</span>
+                    </div>
+                </div>
+                <div class="panel-card-body">
+                    <div class="question-block mb-4">
+                        <span class="question-number-badge">Q{{ question_number }}</span>
+                        <h3>{{ question.question_text }}</h3>
+                    </div>
+
+                    <div class="option-list">
+                        {% set options = {'A': question.option_a, 'B': question.option_b, 'C': question.option_c, 'D': question.option_d} %}
+                        {% for key, value in options.items() %}
+                            <label class="option-card">
+                                <input
+                                    type="radio"
+                                    name="selected_option"
+                                    value="{{ key }}"
+                                    {% if selected_option == key %}checked{% endif %}
+                                >
+                                <span class="option-key">{{ key }}</span>
+                                <span>{{ value }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+
+                    <div class="test-nav-actions d-flex flex-wrap gap-2 mt-4">
+                        {% if question_number > 1 %}
+                            <a href="{{ url_for('tests.question_page', attempt_id=attempt.id, question_number=question_number - 1) }}" class="btn btn-light border js-save-before-nav">Previous</a>
+                        {% endif %}
+
+                        {% if question_number < total_questions %}
+                            <a href="{{ url_for('tests.question_page', attempt_id=attempt.id, question_number=question_number + 1) }}" class="btn btn-brand js-save-before-nav">Next</a>
+                        {% endif %}
+
+                        <form method="post" action="{{ url_for('tests.pause_test', attempt_id=attempt.id) }}" class="js-pause-form" data-confirm-message="Pause this test now?">
+                            <button type="submit" class="btn btn-outline-secondary">Pause Test</button>
+                        </form>
+
+                        <form method="post" action="{{ url_for('tests.submit_test', attempt_id=attempt.id) }}" id="submitTestForm" data-confirm-message="Final submit this test? You will not be able to edit answers after submission.">
+                            <button type="submit" class="btn btn-success">Final Submit</button>
+                        </form>
+                    </div>
+
+                    <div class="small text-muted mt-3" id="autosaveStatus">Answers save automatically when you select an option.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            {% include "partials/question_palette.html" %}
+            <div class="panel-card mt-4">
+                <div class="panel-card-body">
+                    <h3 class="h6">Test Rules</h3>
+                    <ul class="small text-muted ps-3 mb-0">
+                        <li>{{ mock_test.marks_per_question }} marks per correct answer</li>
+                        <li>
+                            Negative marking:
+                            {% if mock_test.negative_marking_enabled %}
+                                Yes ({{ mock_test.negative_mark_value }} marks)
+                            {% else %}
+                                No
+                            {% endif %}
+                        </li>
+                        <li>
+                            Unanswered penalty:
+                            {% if mock_test.unanswered_negative_marking_enabled %}
+                                Yes ({{ mock_test.unanswered_negative_mark_value }} marks)
+                            {% else %}
+                                No
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/test_engine.js') }}"></script>
+{% endblock %}

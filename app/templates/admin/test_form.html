@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% set page_title = "Create Mock Test" if not test else "Edit Mock Test" %}
+
+{% block title %}Mock-Test | {{ "Create Mock Test" if not test else "Edit Mock Test" }}{% endblock %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">{{ "Create Mock Test" if not test else "Edit Mock Test" }}</h2>
+            <p class="text-muted mb-0">Set test rules, marking logic, timing, and activation status.</p>
+        </div>
+    </div>
+    <div class="panel-card-body">
+        <form method="post" class="row g-3" id="testForm" data-confirm-message="{{ 'Create this mock test?' if not test else 'Save changes to this mock test?' }}">
+            <div class="col-12">
+                <label class="form-label">Test Title</label>
+                <input type="text" name="title" class="form-control" value="{{ test.title if test else '' }}" required>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="4" required>{{ test.description if test else '' }}</textarea>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Time Limit (minutes)</label>
+                <input type="number" min="1" name="time_limit_minutes" class="form-control" value="{{ test.time_limit_minutes if test else 30 }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Marks Per Question</label>
+                <input type="number" step="0.25" min="0.25" name="marks_per_question" class="form-control" value="{{ test.marks_per_question if test else 1 }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" role="switch" name="is_active" {% if not test or test.is_active %}checked{% endif %}>
+                    <label class="form-check-label">Active and visible to users</label>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="panel-muted">
+                    <div class="form-check form-switch mb-3">
+                        <input
+                            class="form-check-input js-toggle-section"
+                            type="checkbox"
+                            role="switch"
+                            id="negativeMarkingSwitch"
+                            name="negative_marking_enabled"
+                            data-target="#negativeMarkValueWrap"
+                            {% if test and test.negative_marking_enabled %}checked{% endif %}
+                        >
+                        <label class="form-check-label fw-semibold" for="negativeMarkingSwitch">Enable Negative Marking</label>
+                    </div>
+                    <div id="negativeMarkValueWrap" class="{% if not test or not test.negative_marking_enabled %}d-none{% endif %}">
+                        <label class="form-label">Negative Mark Value</label>
+                        <input type="number" step="0.25" min="0" name="negative_mark_value" class="form-control" value="{{ test.negative_mark_value if test else 0 }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="panel-muted">
+                    <div class="form-check form-switch mb-3">
+                        <input
+                            class="form-check-input js-toggle-section"
+                            type="checkbox"
+                            role="switch"
+                            id="unansweredNegativeMarkingSwitch"
+                            name="unanswered_negative_marking_enabled"
+                            data-target="#unansweredNegativeMarkValueWrap"
+                            {% if test and test.unanswered_negative_marking_enabled %}checked{% endif %}
+                        >
+                        <label class="form-check-label fw-semibold" for="unansweredNegativeMarkingSwitch">Enable Unanswered Negative Marking</label>
+                    </div>
+                    <div id="unansweredNegativeMarkValueWrap" class="{% if not test or not test.unanswered_negative_marking_enabled %}d-none{% endif %}">
+                        <label class="form-label">Unanswered Negative Mark Value</label>
+                        <input type="number" step="0.25" min="0" name="unanswered_negative_mark_value" class="form-control" value="{{ test.unanswered_negative_mark_value if test else 0 }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-brand">{{ "Create Test" if not test else "Save Changes" }}</button>
+                <a href="{{ url_for('admin.test_list') }}" class="btn btn-light border" data-confirm-message="Discard these changes and go back to Mock Test Library?">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

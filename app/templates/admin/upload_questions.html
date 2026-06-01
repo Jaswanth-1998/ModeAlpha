@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% set page_title = "Upload Questions" %}
+
+{% block title %}Mock-Test | Upload Questions{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h2 class="h5 mb-1">Upload Question Document</h2>
+                    <p class="text-muted mb-0">Import questions into <strong>{{ test.title }}</strong> from a `.docx` file.</p>
+                </div>
+            </div>
+            <div class="panel-card-body">
+                <form method="post" enctype="multipart/form-data" class="row g-3" data-confirm-message="Import questions from this Word document?">
+                    <div class="col-12">
+                        <label class="form-label">Choose Word Document</label>
+                        <input type="file" name="question_file" accept=".docx" class="form-control" required>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-brand">Import Questions</button>
+                        <a href="{{ url_for('admin.test_list') }}" class="btn btn-light border ms-2" data-confirm-message="Cancel question import and go back to the test list?">Back to Test List</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="panel-card h-100">
+            <div class="panel-card-header">
+                <div>
+                    <h2 class="h5 mb-1">Supported Format</h2>
+                    <p class="text-muted mb-0">You can use either answer-per-question format or a final answer-key format.</p>
+                </div>
+            </div>
+            <div class="panel-card-body">
+<pre class="docx-format-example">Format 1: answer after each question
+
+1. Which language powers Flask?
+A. Java
+B. Python
+C. PHP
+D. Ruby
+ANSWER: B
+
+2. Which database is used here?
+A. PostgreSQL
+B. MongoDB
+C. SQLite
+D. Oracle
+ANSWER: C
+
+Format 2: final answer key at the end
+
+1. Scientific temper means?
+A) Logical thinking
+B) Blind belief
+C) Memory
+D) None
+
+2. Rote learning means?
+A) Memorization
+B) Understanding
+C) Logic
+D) None
+
+ANSWER KEY
+1-2:
+A, A</pre>
+                <p class="small text-muted mb-0">The importer ignores section headings like PART A or UNIT I. Current question count: {{ test.total_questions }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

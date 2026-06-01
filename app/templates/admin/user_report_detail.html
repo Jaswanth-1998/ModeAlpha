@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% set page_title = "User Report Detail" %}
+
+{% block title %}Mock-Test | User Report Detail{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="section-title mb-1">{{ detail_data.user.username }}</h2>
+        <p class="text-muted mb-0">Detailed report of tests attended by this user.</p>
+    </div>
+    <a href="{{ url_for('admin.reports') }}" class="btn btn-light border">Back to Reports</a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="metric-card">
+            <small>No. of Tests Attended</small>
+            <h3>{{ detail_data.summary.tests_attended }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card accent-two">
+            <small>Total Marks</small>
+            <h3>{{ detail_data.summary.total_marks }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card accent-three">
+            <small>Percentage</small>
+            <h3>{{ detail_data.summary.percentage }}%</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">Attended Tests</h2>
+            <p class="text-muted mb-0">Test-by-test performance history for this user.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sl. No</th>
+                        <th>Test Name</th>
+                        <th>Questions</th>
+                        <th>Total Marks</th>
+                        <th>Obtained Marks</th>
+                        <th>Percentage</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in detail_data.rows %}
+                        <tr>
+                            <td>{{ detail_data.pagination.start_index + loop.index0 }}</td>
+                            <td>{{ row.test.title }}</td>
+                            <td>{{ row.questions }}</td>
+                            <td>{{ row.total_marks }}</td>
+                            <td>{{ row.obtained_marks }}</td>
+                            <td>{{ row.percentage }}%</td>
+                            <td>{{ row.submitted_at.strftime('%d %b %Y %I:%M %p') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">This user has not attended any tests yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = detail_data.pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

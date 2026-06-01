@@ -1,0 +1,52 @@
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-mark">M</div>
+        <div>
+            <h2>Mock-Test</h2>
+            <p>{{ current_user.role|title }} workspace</p>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        {% if current_user.role == "admin" %}
+            <a class="sidebar-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'admin.pending_users' %}active{% endif %}" href="{{ url_for('admin.pending_users') }}">
+                <i class="bi bi-person-check"></i>
+                <span>User Approvals</span>
+            </a>
+            <a class="sidebar-link {% if request.endpoint in ['admin.test_list', 'admin.create_test', 'admin.edit_test', 'admin.upload_questions'] %}active{% endif %}" href="{{ url_for('admin.test_list') }}">
+                <i class="bi bi-journal-text"></i>
+                <span>Mock Tests</span>
+            </a>
+            <a class="sidebar-link {% if request.endpoint in ['admin.reports', 'admin.test_report_detail', 'admin.user_report_detail'] %}active{% endif %}" href="{{ url_for('admin.reports') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Reports</span>
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'admin.settings' %}active{% endif %}" href="{{ url_for('admin.settings') }}">
+                <i class="bi bi-sliders"></i>
+                <span>Settings</span>
+            </a>
+        {% else %}
+            <a class="sidebar-link {% if request.endpoint == 'user.dashboard' %}active{% endif %}" href="{{ url_for('user.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="sidebar-link {% if request.endpoint in ['user.tests', 'tests.question_page'] %}active{% endif %}" href="{{ url_for('user.tests') }}">
+                <i class="bi bi-clipboard-data"></i>
+                <span>Available Tests</span>
+            </a>
+            <a class="sidebar-link {% if request.endpoint in ['user.results', 'user.result_detail'] %}active{% endif %}" href="{{ url_for('user.results') }}">
+                <i class="bi bi-award"></i>
+                <span>Results</span>
+            </a>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="small text-white-50">Signed in as</div>
+        <strong>{{ current_user.username }}</strong>
+    </div>
+</aside>

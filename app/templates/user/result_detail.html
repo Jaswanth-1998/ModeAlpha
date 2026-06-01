@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% set page_title = "Result Detail" %}
+
+{% block title %}Mock-Test | Result Detail{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="section-title mb-1">{{ result_data.result.mock_test.title }}</h2>
+        <p class="text-muted mb-0">Detailed performance summary with question-wise review.</p>
+    </div>
+    <a href="{{ url_for('user.results') }}" class="btn btn-light border">Back to Results</a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <small>Obtained Marks</small>
+            <h3>{{ result_data.result.obtained_marks }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-two">
+            <small>Correct Answers</small>
+            <h3>{{ result_data.result.correct_answers }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-three">
+            <small>Wrong Answers</small>
+            <h3>{{ result_data.result.wrong_answers }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-four">
+            <small>Percentage</small>
+            <h3>{{ result_data.result.percentage }}%</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">Question Review</h2>
+            <p class="text-muted mb-0">Compare your selected answers with the correct options.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Question</th>
+                        <th>Your Answer</th>
+                        <th>Correct Answer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in result_data.question_rows %}
+                        <tr>
+                            <td>{{ row.question_order }}</td>
+                            <td>{{ row.question_text }}</td>
+                            <td>
+                                <span class="status-pill {{ 'approved' if row.selected_option == row.correct_answer else 'pending' }}">
+                                    {{ row.selected_option }}
+                                </span>
+                            </td>
+                            <td>{{ row.correct_answer }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = result_data.question_rows_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

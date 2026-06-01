@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% set page_title = "Available Tests" %}
+
+{% block title %}Mock-Test | Available Tests{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="section-title mb-1">Available Mock Tests</h2>
+        <p class="text-muted mb-0">Open a fresh test, resume an unfinished attempt, or review a completed result.</p>
+    </div>
+    <span class="status-pill approved">{{ tests_data|length }} tests available</span>
+</div>
+
+<div class="row g-4">
+    {% for item in tests_data %}
+        <div class="col-lg-6">
+            <div class="panel-card h-100">
+                <div class="panel-card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <h3 class="h5 mb-1">{{ item.test.title }}</h3>
+                            <p class="text-muted mb-0">{{ item.test.description }}</p>
+                        </div>
+                        <span class="status-pill {{ 'approved' if item.result else 'pending' }}">
+                            {% if item.result %}
+                                Completed
+                            {% elif item.active_attempt %}
+                                {{ "Paused" if item.active_attempt.status == "paused" else "In Progress" }}
+                            {% else %}
+                                Ready
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="info-tile">
+                                <small>Questions</small>
+                                <strong>{{ item.test.total_questions }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="info-tile">
+                                <small>Time Limit</small>
+                                <strong>{{ item.test.time_limit_minutes }} mins</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="info-tile">
+                                <small>Marks/Question</small>
+                                <strong>{{ item.test.marks_per_question }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="info-tile">
+                                <small>Negative Marking</small>
+                                <strong>{{ "Yes" if item.test.negative_marking_enabled else "No" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if item.result %}
+                            <a href="{{ url_for('user.result_detail', result_id=item.result.id) }}" class="btn btn-outline-dark">View Result</a>
+                        {% else %}
+                            <form method="post" action="{{ url_for('tests.start_test', test_id=item.test.id) }}" data-confirm-message="{{ 'Resume this mock test now?' if item.active_attempt else 'Start this mock test now?' }}">
+                                <button type="submit" class="btn btn-brand">
+                                    {{ "Resume Test" if item.active_attempt else "Start Test" }}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    {% if item.active_attempt and item.remaining_seconds is not none %}
+                        <div class="small text-muted mt-3">
+                            Remaining time:
+                            {{ item.remaining_seconds // 60 }}m {{ item.remaining_seconds % 60 }}s
+                            {% if item.active_attempt.status == "paused" %}
+                                - This test is paused and ready to resume.
+                            {% else %}
+                                - Your timer will continue while this attempt is active.
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="panel-card">
+                <div class="panel-card-body text-center py-5 text-muted">
+                    No active tests are available right now.
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

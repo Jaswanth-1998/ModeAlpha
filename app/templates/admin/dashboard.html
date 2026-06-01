@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% set page_title = "Admin Dashboard" %}
+
+{% block title %}Mock-Test | Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="section-title mb-1">Control Center</h2>
+        <p class="text-muted mb-0">Track registrations, test inventory, and recent activity from one place.</p>
+    </div>
+    <button
+        class="btn btn-outline-dark js-refresh-admin-metrics"
+        data-analytics-url="{{ url_for('api.admin_dashboard_analytics') }}"
+    >
+        <i class="bi bi-arrow-repeat me-2"></i>Refresh Metrics
+    </button>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <small>Total Users</small>
+            <h3 data-admin-metric="total_users">{{ data.total_users }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-two">
+            <small>Total Tests</small>
+            <h3 data-admin-metric="total_tests">{{ data.total_tests }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-three">
+            <small>Users Attended</small>
+            <h3 data-admin-metric="users_attended">{{ data.users_attended }}</h3>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card accent-four">
+            <small>Pending Approvals</small>
+            <h3 data-admin-metric="pending_approvals">{{ data.pending_approvals }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h2 class="h5 mb-1">Recent Test Activities</h2>
+                    <p class="text-muted mb-0">Latest user submissions and marks.</p>
+                </div>
+            </div>
+            <div class="panel-card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Test</th>
+                                <th>Marks</th>
+                                <th>Percentage</th>
+                                <th>Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in data.recent_activities %}
+                                <tr>
+                                    <td>{{ activity.username }}</td>
+                                    <td>{{ activity.test_title }}</td>
+                                    <td>{{ activity.obtained_marks }}</td>
+                                    <td>{{ activity.percentage }}%</td>
+                                    <td>{{ activity.submitted_at.strftime('%d %b %Y %I:%M %p') }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No test activity recorded yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% set pagination = data.recent_activities_pagination %}
+                {% include "partials/pagination.html" %}
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel-card h-100">
+            <div class="panel-card-header">
+                <div>
+                    <h2 class="h5 mb-1">Quick Actions</h2>
+                    <p class="text-muted mb-0">Move faster through common admin tasks.</p>
+                </div>
+            </div>
+            <div class="panel-card-body">
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('admin.pending_users') }}" class="quick-action">
+                        <i class="bi bi-person-check"></i>
+                        <span>Approve registered users</span>
+                    </a>
+                    <a href="{{ url_for('admin.create_test') }}" class="quick-action">
+                        <i class="bi bi-file-earmark-plus"></i>
+                        <span>Create a new mock test</span>
+                    </a>
+                    <a href="{{ url_for('admin.reports') }}" class="quick-action">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <span>Open reports and analytics</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

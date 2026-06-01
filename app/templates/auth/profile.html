@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% set page_title = "Edit Profile" %}
+
+{% block title %}Mock-Test | Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="panel-card">
+            <div class="panel-card-body text-center">
+                <div class="profile-avatar-large">{{ current_user.username[0]|upper }}</div>
+                <h2 class="h4 mt-3">{{ current_user.username }}</h2>
+                <p class="text-muted mb-3">{{ current_user.email }}</p>
+                <span class="status-pill {{ 'approved' if current_user.is_approved else 'pending' }}">
+                    {% if current_user.role == 'admin' %}
+                        Admin Account
+                    {% elif current_user.is_approved %}
+                        Approved User
+                    {% else %}
+                        Pending Approval
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h2 class="h5 mb-1">Profile Information</h2>
+                    <p class="text-muted mb-0">Update your personal account details and change your password if needed.</p>
+                </div>
+            </div>
+            <div class="panel-card-body">
+                <form method="post" class="row g-3" autocomplete="off" data-confirm-message="Save these profile changes?">
+                    <div class="col-md-6">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" value="{{ current_user.username }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ current_user.email }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="text" name="mobile_number" class="form-control" value="{{ current_user.mobile_number }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" name="date_of_birth" class="form-control" value="{{ current_user.date_of_birth.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    <div class="col-12">
+                        <hr class="my-2">
+                        <h3 class="h6 mb-1">Change Password</h3>
+                        <p class="text-muted small mb-0">Leave these fields blank if you do not want to change your password.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" name="current_password" class="form-control js-profile-password-field" autocomplete="off">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">New Password</label>
+                        <input type="password" name="new_password" class="form-control js-profile-password-field" minlength="6" autocomplete="new-password">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="form-control js-profile-password-field" minlength="6" autocomplete="new-password">
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-brand">Save Changes</button>
+                        {% if current_user.role == "admin" %}
+                            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-light border">Back to Dashboard</a>
+                        {% else %}
+                            <a href="{{ url_for('user.dashboard') }}" class="btn btn-light border">Back to Dashboard</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

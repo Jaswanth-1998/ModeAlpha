@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% set page_title = "Results" %}
+
+{% block title %}Mock-Test | Results{% endblock %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">Submitted Result History</h2>
+            <p class="text-muted mb-0">All completed mock tests and performance summaries in one table.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Test</th>
+                        <th>Correct</th>
+                        <th>Wrong</th>
+                        <th>Unanswered</th>
+                        <th>Marks</th>
+                        <th>Percentage</th>
+                        <th>Submitted At</th>
+                        <th class="text-end">View</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results_data %}
+                        <tr>
+                            <td>{{ result.mock_test.title }}</td>
+                            <td>{{ result.correct_answers }}</td>
+                            <td>{{ result.wrong_answers }}</td>
+                            <td>{{ result.unanswered_answers }}</td>
+                            <td>{{ result.obtained_marks }} / {{ result.total_marks }}</td>
+                            <td>{{ result.percentage }}%</td>
+                            <td>{{ result.created_at.strftime('%d %b %Y %I:%M %p') }}</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('user.result_detail', result_id=result.id) }}" class="btn btn-sm btn-outline-dark">Details</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">You have not submitted any tests yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = results_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

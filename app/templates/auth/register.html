@@ -1,0 +1,40 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Mock-Test | Register{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="mb-4">
+        <h2 class="section-title">Create account</h2>
+        <p class="text-muted mb-0">Register as a user and wait for admin approval before taking tests.</p>
+    </div>
+
+    <form method="post" class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Mobile Number</label>
+            <input type="text" name="mobile_number" class="form-control" required>
+        </div>
+        <div class="col-12">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" name="date_of_birth" class="form-control" required>
+        </div>
+        <div class="col-12 d-grid">
+            <button type="submit" class="btn btn-brand">Register</button>
+        </div>
+    </form>
+
+    <p class="auth-footnote mb-0">Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+</div>
+{% endblock %}

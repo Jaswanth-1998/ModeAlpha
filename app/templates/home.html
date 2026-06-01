@@ -1,0 +1,41 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Mock-Test | Welcome{% endblock %}
+
+{% block content %}
+<div class="auth-card wide-card">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="section-title mb-2">Welcome to Mock-Test</h2>
+            <p class="text-muted mb-0">A complete exam practice portal with role-based dashboards and structured test delivery.</p>
+        </div>
+        <span class="status-pill">Production-style Flask</span>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>User module</h3>
+                <p>Register, get approved, attend tests, track results, and review performance.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>Admin module</h3>
+                <p>Create tests, upload Word documents, approve users, and monitor analytics from one dashboard.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>AJAX workflow</h3>
+                <p>Autosave selected answers, approve users instantly, and refresh dashboard metrics without reloading.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-3">
+        <a class="btn btn-brand" href="{{ url_for('auth.login') }}">Login</a>
+        <a class="btn btn-light border" href="{{ url_for('auth.register') }}">Create Account</a>
+    </div>
+</div>
+{% endblock %}

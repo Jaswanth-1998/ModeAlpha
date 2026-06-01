@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% set page_title = "Reports & Analytics" %}
+
+{% block title %}Mock-Test | Reports{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="metric-card">
+            <small>Approved Users</small>
+            <h3>{{ report_data.overall_metrics.approved_users }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card accent-two">
+            <small>Pending Users</small>
+            <h3>{{ report_data.overall_metrics.pending_users }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card accent-three">
+            <small>Submitted Attempts</small>
+            <h3>{{ report_data.overall_metrics.submitted_attempts }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card accent-four">
+            <small>Average Percentage</small>
+            <h3>{{ report_data.overall_metrics.average_percentage }}%</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mb-4">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">Approved Users Report</h2>
+            <p class="text-muted mb-0">Approved user master list. Passwords are stored as secure hashes and cannot be shown in plain text.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sl. No</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Password</th>
+                        <th>Mobile Number</th>
+                        <th>Date of Birth</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in report_data.approved_users_report %}
+                        <tr>
+                            <td>{{ report_data.approved_users_pagination.start_index + loop.index0 }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td><span class="status-pill approved">Protected (Hashed)</span></td>
+                            <td>{{ user.mobile_number }}</td>
+                            <td>{{ user.date_of_birth.strftime('%d %b %Y') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No approved users found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = report_data.approved_users_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+
+<div class="panel-card mb-4">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">User-wise Marks Report</h2>
+            <p class="text-muted mb-0">Track how each user is performing across submitted tests.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User Name</th>
+                        <th>No. of Tests Attended</th>
+                        <th>Total Marks</th>
+                        <th>Percentage</th>
+                        <th>View</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_data.user_report %}
+                        <tr>
+                            <td>{{ row.user.username }}</td>
+                            <td>{{ row.tests_attended_count }}</td>
+                            <td>{{ row.total_marks }}</td>
+                            <td>{{ row.percentage }}%</td>
+                            <td>
+                                <a href="{{ url_for('admin.user_report_detail', user_id=row.user.id) }}" class="btn btn-sm btn-outline-dark">View</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No user report data available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = report_data.user_report_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2 class="h5 mb-1">Test-wise Report</h2>
+            <p class="text-muted mb-0">See performance summaries for each mock test.</p>
+        </div>
+    </div>
+    <div class="panel-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Questions</th>
+                        <th>Total Marks</th>
+                        <th>No. of Users Attended</th>
+                        <th>Highest Score</th>
+                        <th>View</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_data.test_report %}
+                        <tr>
+                            <td>{{ row.test.title }}</td>
+                            <td>{{ row.test.total_questions }}</td>
+                            <td>{{ row.total_marks }}</td>
+                            <td>{{ row.users_attended_count }}</td>
+                            <td>{{ row.highest_score }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.test_report_detail', test_id=row.test.id) }}" class="btn btn-sm btn-outline-dark">View</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No test report data available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% set pagination = report_data.test_report_pagination %}
+        {% include "partials/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
