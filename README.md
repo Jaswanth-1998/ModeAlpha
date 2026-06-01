@@ -377,7 +377,11 @@ Detailed PostgreSQL setup notes are available in [POSTGRESQL_SETUP.md](POSTGRESQ
 
 ## Additional Guides
 
+- [Quick Start](QUICK_START.md)
 - [Git Workflow Handbook](GIT_WORKFLOW.md)
 - [Future Code Update and Database Update Guide](FUTURE_UPDATE_WORKFLOW.md)
+- [Commit Message Guide](COMMIT_MESSAGE_GUIDE.md)
+- [Professional Commit Message Templates](COMMIT_MESSAGE_TEMPLATES.md)
+
 
 
