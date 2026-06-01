@@ -1,164 +1,245 @@
-# Git Workflow Handbook
+# Git Workflow Handbook (Office + Home + Testing + Production)
 
-This project follows a simple 3-branch workflow so production stays stable while development and testing continue safely.
+This workflow uses:
 
-## Branch Purpose
-
-- `main` -> production / live deployed code
-- `development` -> active development work
-- `testing` -> QA / UAT testing branch
+* `main` → production/live deployed code
+* `development` → active development
+* `testing` → UAT/testing branch
 
 Goal:
-- `main` should always stay stable
-- all new work starts in `development`
-- testing happens in `testing`
-- only approved code moves to `main`
 
-## Initial Repository Setup
+* `main` always stable
+* New work goes to `development`
+* Testing happens in `testing`
+* Only tested code goes to `main`
+* Old deployed code stays live until merge to `main`
 
-### 1. Create local project folder
+---
+
+# 1. Create Repository
+
+## Create local project
 
 ```bash
 mkdir myproject
 cd myproject
 ```
 
-### 2. Initialize Git
+---
+
+# 2. Initialize Git
 
 ```bash
 git init
 ```
 
-### 3. Add project files
+---
+
+# 3. Add Files
 
 ```bash
 git add .
 ```
 
-### 4. Create first commit
+---
+
+# 4. First Commit
 
 ```bash
 git commit -m "Initial project setup"
 ```
 
-### 5. Add GitHub remote
+---
 
-Create a repository in GitHub, then run:
+# 5. Add GitHub Repository
+
+Create repository in [GitHub](https://github.com?utm_source=chatgpt.com)
+
+Example:
 
 ```bash
 git remote add origin https://github.com/username/myproject.git
 ```
 
-### 6. Rename default branch to main
+---
+
+# 6. Rename Default Branch to Main
 
 ```bash
 git branch -M main
 ```
 
-### 7. Push main branch
+---
+
+# 7. Push Main Branch
 
 ```bash
 git push -u origin main
 ```
 
-### 8. Create development branch
+---
+
+# 8. Create Development Branch
 
 ```bash
 git checkout -b development
+```
+
+Push it:
+
+```bash
 git push -u origin development
 ```
 
-### 9. Create testing branch
+---
+
+# 9. Create Testing Branch
 
 ```bash
 git checkout -b testing
+```
+
+Push it:
+
+```bash
 git push -u origin testing
 ```
 
-## Final Branch Structure
+---
+
+# Final Branch Structure
 
 ```text
-main         -> Production / live
-development  -> Daily developer work
-testing      -> QA / UAT testing
+main         -> Production/live
+development  -> Developer work
+testing      -> UAT testing
 ```
 
-## Daily Development Workflow
+---
 
-### 1. Move to development branch
+# DAILY WORKFLOW
+
+# 10. Start Working in Development
+
+Always switch to development branch before coding.
 
 ```bash
 git checkout development
 ```
 
-### 2. Pull latest code before starting work
+---
 
-This is important when working from office, home, or another machine.
+# 11. Pull Latest Code Before Work
+
+Very important when working from office/home.
 
 ```bash
 git pull origin development
 ```
 
-### 3. Make code changes
+---
 
-Update files normally.
+# 12. Make Changes
 
-### 4. Check modified files
+Edit files.
+
+---
+
+# 13. Check Changed Files
 
 ```bash
 git status
 ```
 
-### 5. Stage changes
+---
+
+# 14. Add Updated Files
 
 ```bash
 git add .
 ```
 
-Or add only specific files:
+OR specific file:
 
 ```bash
 git add app.py
 ```
 
-### 6. Commit changes
+---
+
+# 15. Commit Changes
 
 ```bash
 git commit -m "Added login feature"
 ```
 
-### 7. Push development work
+---
+
+# 16. Push Development Changes
 
 ```bash
 git push origin development
 ```
 
-## Testing Flow
+---
 
-### Move development code into testing
+# TESTING FLOW
+
+# 17. Move Development Code to Testing
+
+Switch to testing branch:
 
 ```bash
 git checkout testing
+```
+
+---
+
+Pull latest testing code:
+
+```bash
 git pull origin testing
+```
+
+---
+
+Merge development into testing:
+
+```bash
 git merge development
+```
+
+---
+
+Push testing branch:
+
+```bash
 git push origin testing
 ```
 
-Now QA / UAT team can test from `testing`.
+---
 
-Important:
-- production is still unchanged
-- `main` still holds the old live stable code
+# UAT / TESTING
 
-## If Bugs Are Found During Testing
+QA/UAT team tests from `testing` branch.
 
-Go back to development:
+Production (`main`) still uses old stable code.
+
+Nothing changes in production yet.
+
+---
+
+# IF BUGS FOUND
+
+Switch back:
 
 ```bash
 git checkout development
 ```
 
-Fix the issue, then:
+Fix bugs.
+
+Then:
 
 ```bash
 git add .
@@ -166,7 +247,7 @@ git commit -m "Fixed login validation bug"
 git push origin development
 ```
 
-Move the fix again to testing:
+Again move to testing:
 
 ```bash
 git checkout testing
@@ -174,48 +255,190 @@ git merge development
 git push origin testing
 ```
 
-## Production Deployment Flow
+---
 
-Only after testing approval:
+# FINAL PRODUCTION DEPLOYMENT
+
+# 18. Merge Tested Code to Main
+
+Switch:
 
 ```bash
 git checkout main
+```
+
+---
+
+Pull latest main:
+
+```bash
 git pull origin main
+```
+
+---
+
+Merge tested code:
+
+```bash
 git merge testing
+```
+
+---
+
+Push main:
+
+```bash
 git push origin main
 ```
 
-Then deploy from `main`.
+---
 
-## Important Real-World Rule
+Now deploy from `main`.
 
-Production server should deploy only from:
+---
+
+# IMPORTANT REAL-WORLD RULE
+
+## Production server should ONLY deploy from `main`
+
+Never deploy from:
+
+* development
+* testing
+
+Only:
 
 ```text
 main
 ```
 
-Never deploy from:
-- `development`
-- `testing`
+That ensures unfinished work never goes live.
 
-This ensures unfinished work never goes live.
+---
 
-## Example Version Flow
+# WHEN DEVELOPMENT HAS NEW CHANGES BUT MAIN SHOULD STAY OLD
+
+Example:
 
 ```text
-main         -> Version 1 live
-development  -> Version 2 in progress
-testing      -> Version 2 under testing
+main         -> version 1 live
+development  -> version 2 in progress
+testing      -> testing version 2
 ```
 
-Production still stays on Version 1 until `testing` is merged into `main`.
+Production still uses:
 
-## Office and Home Workflow
+```text
+main -> version 1
+```
 
-### Office
+Because you did NOT merge to main.
 
-Before starting work:
+So old stable code remains deployed.
+
+---
+
+# HOW TO CHECK OLD VERSION CODES
+
+# View Commit History
+
+```bash
+git log --oneline
+```
+
+Example:
+
+```text
+a1b2c3 Added payment gateway
+d4e5f6 Fixed login
+g7h8i9 Initial commit
+```
+
+---
+
+# View Specific Old Version
+
+```bash
+git checkout COMMIT_ID
+```
+
+Example:
+
+```bash
+git checkout d4e5f6
+```
+
+Now project becomes old version temporarily.
+
+---
+
+# Return Back
+
+```bash
+git checkout main
+```
+
+OR
+
+```bash
+git checkout development
+```
+
+---
+
+# DEPLOY OLD VERSION ONLY
+
+Example:
+
+Production broken after latest deployment.
+
+Find old stable commit:
+
+```bash
+git log --oneline
+```
+
+Checkout old commit:
+
+```bash
+git checkout d4e5f6
+```
+
+Deploy it.
+
+---
+
+# BETTER REAL-WORLD METHOD (TAGS)
+
+# Create Stable Release Tag
+
+```bash
+git tag v1.0
+```
+
+Push tag:
+
+```bash
+git push origin v1.0
+```
+
+---
+
+# Deploy Old Stable Version
+
+```bash
+git checkout v1.0
+```
+
+Much cleaner than commit IDs.
+
+---
+
+# OFFICE + HOME WORKFLOW
+
+# OFFICE
+
+Before work:
 
 ```bash
 git checkout development
@@ -230,18 +453,22 @@ git commit -m "Completed dashboard UI"
 git push origin development
 ```
 
-### Home
+---
 
-Before starting work:
+# HOME
+
+Before work:
 
 ```bash
 git checkout development
 git pull origin development
 ```
 
-Now office updates are available on the home machine.
+Now office updates come to home laptop.
 
-After work:
+Work normally.
+
+Then:
 
 ```bash
 git add .
@@ -249,25 +476,39 @@ git commit -m "Added API integration"
 git push origin development
 ```
 
-## Very Important Rule
+---
 
-Before starting work on another machine, always run:
+# VERY IMPORTANT RULE
+
+Always do:
 
 ```bash
-git pull origin development
+git pull
 ```
 
-Otherwise conflicts can happen.
+before starting work in another machine.
 
-## If Conflict Happens
+Otherwise conflicts happen.
 
-Check status:
+---
+
+# IF CONFLICT HAPPENS
+
+Example:
+
+Same file edited in office and home.
+
+Git shows conflict.
+
+Check files:
 
 ```bash
 git status
 ```
 
-Git may show conflict markers like:
+Open conflicted file.
+
+You will see:
 
 ```text
 <<<<<<< HEAD
@@ -277,7 +518,11 @@ office code
 >>>>>>> branch
 ```
 
-Fix the file manually, then run:
+Edit manually.
+
+Keep correct code.
+
+Then:
 
 ```bash
 git add .
@@ -285,136 +530,99 @@ git commit -m "Resolved merge conflict"
 git push origin development
 ```
 
-## View Old Versions
+---
 
-### Show commit history
-
-```bash
-git log --oneline
-```
-
-Example:
-
-```text
-a1b2c3 Added payment gateway
-d4e5f6 Fixed login
-g7h8i9 Initial commit
-```
-
-### Checkout old version temporarily
-
-```bash
-git checkout COMMIT_ID
-```
-
-Example:
-
-```bash
-git checkout d4e5f6
-```
-
-Return back later:
-
-```bash
-git checkout main
-```
-
-or
-
-```bash
-git checkout development
-```
-
-## Better Real-World Method: Tags
-
-### Create release tag
-
-```bash
-git tag v1.0
-git push origin v1.0
-```
-
-### Use an old stable release
-
-```bash
-git checkout v1.0
-```
-
-Tags are cleaner than remembering commit IDs.
-
-## Complete Flow Summary
+# COMPLETE FLOW SUMMARY
 
 ```text
 Developer Work
-      ?
+      ↓
 development
-      ?
+      ↓
 Merge to testing
-      ?
+      ↓
 UAT Testing
-      ?
+      ↓
 Bug Fixes in development
-      ?
+      ↓
 Merge again to testing
-      ?
+      ↓
 Approved
-      ?
-Merge testing -> main
-      ?
+      ↓
+Merge testing → main
+      ↓
 Deploy main
 ```
 
-## Most Common Git Commands
+---
 
-### Clone project
+# MOST IMPORTANT COMMANDS
+
+## Clone Project
 
 ```bash
 git clone REPO_URL
 ```
 
-### Switch branch
+---
+
+## Switch Branch
 
 ```bash
 git checkout development
 ```
 
-### Pull latest code
+---
+
+## Pull Latest Code
 
 ```bash
 git pull origin development
 ```
 
-### Push code
+---
+
+## Push Code
 
 ```bash
 git push origin development
 ```
 
-### Create branch
+---
+
+## Create Branch
 
 ```bash
 git checkout -b testing
 ```
 
-### Merge branch
+---
+
+## Merge Branch
 
 ```bash
 git merge development
 ```
 
-### View branches
+---
+
+## View Branches
 
 ```bash
 git branch
 ```
 
-### View commit history
+---
+
+## View Commit History
 
 ```bash
 git log --oneline
 ```
 
-## Recommended Strategy for This Project
+---
+
+# Recommended Real-World Strategy
 
 ```text
 main
@@ -424,7 +632,224 @@ development
   Daily developer coding
 
 testing
-  QA / UAT validation
+  QA/UAT validation
 ```
 
-This is simple, safe, and works well when you move between office, home, testing, and production environments.
+This is simple, scalable, and used in many companies.
+
+
+Since you already have the project on your **office system** and want to work on the same project from your **home system**, you only need `git clone` **once on the home system**.
+
+Repository:
+
+```text
+https://github.com/Jaswanth-1998/ModeAlpha.git
+```
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+### git clone once on the home system ###
+
+# First Time Setup on Home System
+
+Open Terminal / Git Bash.
+
+## 1. Go to the folder where you want the project
+
+Example:
+
+```bash
+cd D:\Projects
+```
+
+or
+
+```bash
+cd ~/Projects
+```
+
+---
+
+## 2. Clone the repository
+
+```bash
+git clone https://github.com/Jaswanth-1998/ModeAlpha.git
+```
+
+Output:
+
+```text
+Cloning into 'ModeAlpha'...
+Receiving objects...
+Resolving deltas...
+```
+
+Now a folder is created:
+
+```text
+Projects/
+└── ModeAlpha/
+```
+
+---
+
+## 3. Enter the project folder
+
+```bash
+cd ModeAlpha
+```
+
+---
+
+## 4. Check available branches
+
+```bash
+git branch -a
+```
+
+Example output:
+
+```text
+* main
+  remotes/origin/main
+  remotes/origin/development
+  remotes/origin/testing
+```
+
+---
+
+## 5. Switch to development branch
+
+If development branch already exists remotely:
+
+```bash
+git checkout development
+```
+
+If Git says branch not found:
+
+```bash
+git checkout -b development origin/development
+```
+
+Verify:
+
+```bash
+git branch
+```
+
+Output:
+
+```text
+* development
+  main
+```
+
+Now you're ready to work.
+
+---
+
+# Daily Office Workflow
+
+Before starting work:
+
+```bash
+cd ModeAlpha
+git checkout development
+git pull origin development
+```
+
+Do coding.
+
+Then:
+
+```bash
+git add .
+git commit -m "Completed feature XYZ"
+git push origin development
+```
+
+---
+
+# Daily Home Workflow
+
+After reaching home:
+
+```bash
+cd ModeAlpha
+git checkout development
+git pull origin development
+```
+
+Now you get all office changes.
+
+Do coding.
+
+Then:
+
+```bash
+git add .
+git commit -m "Modified feature XYZ"
+git push origin development
+```
+
+---
+
+# Next Day at Office
+
+Get home changes:
+
+```bash
+cd ModeAlpha
+git checkout development
+git pull origin development
+```
+
+Continue working.
+
+---
+
+# Verify You Are On Correct Branch
+
+Before coding:
+
+```bash
+git branch
+```
+
+Output should be:
+
+```text
+* development
+```
+
+If not:
+
+```bash
+git checkout development
+```
+
+---
+
+# Very Important
+
+Use `git clone` only:
+
+* First time on home laptop
+* First time on new office laptop
+* First time on a new machine
+
+After that, never clone again on the same machine.
+
+Use:
+
+```bash
+git pull origin development
+```
+
+to get the latest changes and
+
+```bash
+git push origin development
+```
+
+to send your changes to GitHub.
