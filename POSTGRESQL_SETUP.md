@@ -1,6 +1,6 @@
 # PostgreSQL and pgAdmin Setup
 
-This guide shows how to run `Mock-Test` with PostgreSQL and inspect everything in pgAdmin.
+This guide shows how to run `ModeAlpha` with PostgreSQL and inspect everything in pgAdmin.
 
 ## 1. Install PostgreSQL and pgAdmin
 
@@ -174,3 +174,4 @@ python -m flask --app run.py db upgrade
 ```
 
 Refresh pgAdmin and check the updated tables.
+

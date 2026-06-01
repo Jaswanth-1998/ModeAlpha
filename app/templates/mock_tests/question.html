@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% set page_title = mock_test.title %}
 
-{% block title %}Mock-Test | {{ mock_test.title }}{% endblock %}
+{% block title %}ModeAlpha | {{ mock_test.title }}{% endblock %}
 
 {% block content %}
 <section
@@ -104,3 +104,4 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/test_engine.js') }}"></script>
 {% endblock %}
+
