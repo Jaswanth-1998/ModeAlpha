@@ -13,6 +13,12 @@ def approve_user_api(user_id):
     return api_controller.approve_user(user_id)
 
 
+@api_bp.route("/admin/users/<int:user_id>/reject", methods=["POST"])
+@admin_required
+def reject_user_api(user_id):
+    return api_controller.reject_user(user_id)
+
+
 @api_bp.route("/admin/dashboard-analytics")
 @admin_required
 def admin_dashboard_analytics():

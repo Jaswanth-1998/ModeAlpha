@@ -1,4 +1,4 @@
-# ModeAlpha
+﻿# ModeAlpha
 
 ModeAlpha is a production-structured Flask web application for creating, managing, and attending mock tests. It uses function-based Flask routes, layered architecture, PostgreSQL, SQLAlchemy ORM, Flask-Migrate, Jinja2 templates, Bootstrap 5, session authentication, AJAX interactions, and Word question import.
 
@@ -377,11 +377,14 @@ Detailed PostgreSQL setup notes are available in [POSTGRESQL_SETUP.md](POSTGRESQ
 
 ## Additional Guides
 
+- [Project Handbook](PROJECT_HANDBOOK.md)
 - [Quick Start](QUICK_START.md)
 - [Git Workflow Handbook](GIT_WORKFLOW.md)
 - [Future Code Update and Database Update Guide](FUTURE_UPDATE_WORKFLOW.md)
 - [Commit Message Guide](COMMIT_MESSAGE_GUIDE.md)
 - [Professional Commit Message Templates](COMMIT_MESSAGE_TEMPLATES.md)
+
+
 
 
 

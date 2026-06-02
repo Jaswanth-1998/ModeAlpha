@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% set page_title = "Upload Questions" %}
 
 {% block title %}ModeAlpha | Upload Questions{% endblock %}
@@ -55,24 +55,20 @@ ANSWER: C
 Format 2: final answer key at the end
 
 1. Scientific temper means?
-A) Logical thinking
-B) Blind belief
-C) Memory
-D) None
+A) Logical thinking B) Blind belief C) Memory D) None
 
 2. Rote learning means?
-A) Memorization
-B) Understanding
-C) Logic
-D) None
+A) Memorization B) Understanding C) Logic D) None
 
 ANSWER KEY
-1-2:
-A, A</pre>
-                <p class="small text-muted mb-0">The importer ignores section headings like PART A or UNIT I. Current question count: {{ test.total_questions }}</p>
+1-2: A, A
+
+Also accepted:
+ANSWER KEY (IMPORTANT)
+1-10: A, B, C, D, A, B, C, D, A, B</pre>
+                <p class="small text-muted mb-0">The importer ignores section headings like PART A or UNIT I and supports options split across lines or written on one line. Current question count: {{ test.total_questions }}</p>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-
