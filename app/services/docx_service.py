@@ -4,6 +4,10 @@ from docx import Document
 
 
 OPTION_PATTERN = re.compile(r"^([A-D])[\.\)]\s*(.+)$", re.IGNORECASE)
+INLINE_OPTIONS_PATTERN = re.compile(
+    r"^A[\.\)]\s*(.+?)\s+B[\.\)]\s*(.+?)\s+C[\.\)]\s*(.+?)\s+D[\.\)]\s*(.+)$",
+    re.IGNORECASE,
+)
 ANSWER_PATTERN = re.compile(
     r"^(answer|ans|correct)\s*[:\-]?\s*([A-D])$",
     re.IGNORECASE,
@@ -13,7 +17,7 @@ QUESTION_START_PATTERN = re.compile(
     re.IGNORECASE,
 )
 ANSWER_KEY_RANGE_PATTERN = re.compile(
-    r"^(?:questions?\s*[:\-]?\s*)?(\d+)\s*[-\u2013]\s*(\d+)\s*:?\s*(.*)$",
+    r"^(?:questions?\s*[:\-]?\s*)?(\d+)\s*[-\u2013\u2014]\s*(\d+)\s*:?\s*(.*)$",
     re.IGNORECASE,
 )
 REQUIRED_OPTION_KEYS = ("A", "B", "C", "D")
@@ -145,6 +149,18 @@ def parse_questions_from_docx(file_path):
             finalize_question()
             continue
 
+        inline_options_match = INLINE_OPTIONS_PATTERN.match(line)
+        if inline_options_match:
+            if not current:
+                raise ValueError("Found options before a question.")
+
+            current["options"]["A"] = inline_options_match.group(1).strip()
+            current["options"]["B"] = inline_options_match.group(2).strip()
+            current["options"]["C"] = inline_options_match.group(3).strip()
+            current["options"]["D"] = inline_options_match.group(4).strip()
+            last_option_key = "D"
+            continue
+
         option_match = OPTION_PATTERN.match(line)
         if option_match:
             if not current:
@@ -212,7 +228,10 @@ def _has_all_required_options(question_data):
 
 def _is_answer_key_header(line):
     normalized = re.sub(r"[^a-z]+", " ", line.lower()).strip()
-    return normalized in {"answer key", "answers", "answer"}
+    return (
+        normalized in {"answer key", "answers", "answer"}
+        or "answer key" in normalized
+    )
 
 
 def _is_metadata_heading(line):

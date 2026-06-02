@@ -16,11 +16,15 @@ from app.services.docx_service import parse_questions_from_docx
 from app.utils.helpers import parse_bool, parse_float, parse_int
 
 
+ACTIVE_DELETE_FLAG = "N"
+DELETED_DELETE_FLAG = "Y"
+
+
 def get_admin_dashboard_data():
     recent_results = (
         Result.query.join(User, User.id == Result.user_id)
         .join(MockTest, MockTest.id == Result.mock_test_id)
-        .filter(User.role == "user", User.delete_flag == "N", MockTest.delete_flag == "N")
+        .filter(User.role == "user", User.delete_flag == ACTIVE_DELETE_FLAG, MockTest.delete_flag == ACTIVE_DELETE_FLAG)
         .order_by(Result.created_at.desc())
         .all()
     )
@@ -37,21 +41,21 @@ def get_admin_dashboard_data():
     ]
 
     return {
-        "total_users": User.query.filter_by(role="user", delete_flag="N").count(),
-        "total_tests": MockTest.query.filter_by(delete_flag="N").count(),
+        "total_users": User.query.filter_by(role="user", delete_flag=ACTIVE_DELETE_FLAG).count(),
+        "total_tests": MockTest.query.filter_by(delete_flag=ACTIVE_DELETE_FLAG).count(),
         "users_attended": db.session.query(func.count(distinct(Attempt.user_id)))
         .join(User, User.id == Attempt.user_id)
         .join(MockTest, MockTest.id == Attempt.mock_test_id)
         .filter(
             Attempt.status == "submitted",
-            User.delete_flag == "N",
-            MockTest.delete_flag == "N",
+            User.delete_flag == ACTIVE_DELETE_FLAG,
+            MockTest.delete_flag == ACTIVE_DELETE_FLAG,
         )
         .scalar(),
         "pending_approvals": User.query.filter_by(
             role="user",
             is_approved=False,
-            delete_flag="N",
+            delete_flag=ACTIVE_DELETE_FLAG,
         ).count(),
         "recent_activities": recent_activities,
     }
@@ -59,14 +63,14 @@ def get_admin_dashboard_data():
 
 def get_pending_users():
     return (
-        User.query.filter_by(role="user", is_approved=False, delete_flag="N")
+        User.query.filter_by(role="user", is_approved=False, delete_flag=ACTIVE_DELETE_FLAG)
         .order_by(User.created_at.asc())
         .all()
     )
 
 
 def approve_user_account(user_id):
-    user = User.query.filter_by(id=user_id, role="user", delete_flag="N").first()
+    user = User.query.filter_by(id=user_id, role="user", delete_flag=ACTIVE_DELETE_FLAG).first()
     if not user:
         raise ValueError("User not found.")
     if user.is_approved:
@@ -78,9 +82,23 @@ def approve_user_account(user_id):
     return user
 
 
+def reject_user_account(user_id):
+    user = User.query.filter_by(id=user_id, role="user", delete_flag=ACTIVE_DELETE_FLAG).first()
+    if not user:
+        raise ValueError("User not found.")
+    if user.is_approved:
+        raise ValueError("Approved users cannot be rejected from the pending list.")
+
+    user.delete_flag = DELETED_DELETE_FLAG
+    user.deleted_at = datetime.utcnow()
+    user.is_active = False
+    db.session.commit()
+    return user
+
+
 def get_tests_for_admin():
     return (
-        MockTest.query.filter_by(delete_flag="N")
+        MockTest.query.filter_by(delete_flag=ACTIVE_DELETE_FLAG)
         .order_by(MockTest.created_at.desc())
         .all()
     )
@@ -89,7 +107,7 @@ def get_tests_for_admin():
 def get_mock_test_by_id(test_id, include_deleted=False):
     query = MockTest.query.filter_by(id=test_id)
     if not include_deleted:
-        query = query.filter_by(delete_flag="N")
+        query = query.filter_by(delete_flag=ACTIVE_DELETE_FLAG)
     test = query.first()
     if not test:
         raise ValueError("Mock test not found.")
@@ -97,7 +115,7 @@ def get_mock_test_by_id(test_id, include_deleted=False):
 
 
 def create_mock_test(form_data, admin_id):
-    mock_test = MockTest(created_by=admin_id, delete_flag="N")
+    mock_test = MockTest(created_by=admin_id, delete_flag=ACTIVE_DELETE_FLAG)
     _apply_test_form_data(mock_test, form_data)
     db.session.add(mock_test)
     db.session.commit()
@@ -112,7 +130,7 @@ def update_mock_test(mock_test, form_data):
 
 def delete_mock_test(test_id):
     test = get_mock_test_by_id(test_id)
-    test.delete_flag = "Y"
+    test.delete_flag = DELETED_DELETE_FLAG
     test.deleted_at = datetime.utcnow()
     test.is_active = False
     db.session.commit()
@@ -140,7 +158,7 @@ def set_user_active_state(user_id, is_active):
     user = User.query.filter_by(id=user_id, role="user").first()
     if not user:
         raise ValueError("User not found.")
-    if user.delete_flag == "Y":
+    if user.delete_flag == DELETED_DELETE_FLAG:
         raise ValueError("Deleted users cannot be activated or deactivated.")
 
     user.is_active = is_active
@@ -152,10 +170,10 @@ def soft_delete_user(user_id):
     user = User.query.filter_by(id=user_id, role="user").first()
     if not user:
         raise ValueError("User not found.")
-    if user.delete_flag == "Y":
+    if user.delete_flag == DELETED_DELETE_FLAG:
         raise ValueError("This user is already deleted.")
 
-    user.delete_flag = "Y"
+    user.delete_flag = DELETED_DELETE_FLAG
     user.deleted_at = datetime.utcnow()
     user.is_active = False
     db.session.commit()
