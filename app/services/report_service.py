@@ -4,6 +4,7 @@ from app.models.attempt import Attempt
 from app.models.mock_test import MockTest
 from app.models.result import Result
 from app.models.user import User
+from app.utils.helpers import build_result_attempt_map
 
 
 def _not_deleted(model):
@@ -19,7 +20,11 @@ def get_user_dashboard_data(user_id):
         )
         .count()
     )
-    results = Result.query.filter_by(user_id=user_id).order_by(Result.created_at.desc()).all()
+    results = (
+        Result.query.filter_by(user_id=user_id)
+        .order_by(Result.created_at.desc(), Result.id.desc())
+        .all()
+    )
     attended_tests = len(results)
     average_marks = round(
         sum(result.obtained_marks for result in results) / attended_tests,
@@ -50,7 +55,11 @@ def get_admin_reports():
 
     user_report = []
     for user in users:
-        user_results = Result.query.filter_by(user_id=user.id).order_by(Result.created_at.desc()).all()
+        user_results = (
+            Result.query.filter_by(user_id=user.id)
+            .order_by(Result.created_at.desc(), Result.id.desc())
+            .all()
+        )
         attempts_count = len(user_results)
         total_marks = round(sum(result.obtained_marks for result in user_results), 2)
         average_percentage = round(
@@ -71,15 +80,21 @@ def get_admin_reports():
         test_results = (
             Result.query.join(User, User.id == Result.user_id)
             .filter(Result.mock_test_id == test.id, _not_deleted(User))
+            .order_by(Result.created_at.desc(), Result.id.desc())
             .all()
         )
         attempts_count = len(test_results)
-        highest_score = max((result.obtained_marks for result in test_results), default=0)
+        unique_users_attended = len({result.user_id for result in test_results})
+        highest_score = max(
+            (result.obtained_marks for result in test_results),
+            default=0,
+        )
         test_report.append(
             {
                 "test": test,
                 "total_marks": round(test.total_questions * test.marks_per_question, 2),
-                "users_attended_count": attempts_count,
+                "attempts_count": attempts_count,
+                "users_attended_count": unique_users_attended,
                 "highest_score": highest_score,
             }
         )
@@ -95,11 +110,14 @@ def get_admin_reports():
             User.is_approved.is_(False),
             _not_deleted(User),
         ).count(),
-        "submitted_attempts": Attempt.query.join(User, User.id == Attempt.user_id).join(MockTest, MockTest.id == Attempt.mock_test_id).filter(
+        "submitted_attempts": Attempt.query.join(User, User.id == Attempt.user_id)
+        .join(MockTest, MockTest.id == Attempt.mock_test_id)
+        .filter(
             Attempt.status == "submitted",
             _not_deleted(User),
             _not_deleted(MockTest),
-        ).count(),
+        )
+        .count(),
         "average_percentage": round(
             Result.query.join(User, User.id == Result.user_id)
             .join(MockTest, MockTest.id == Result.mock_test_id)
@@ -126,13 +144,16 @@ def get_test_report_detail(test_id):
     results = (
         Result.query.join(User, User.id == Result.user_id)
         .filter(Result.mock_test_id == test_id, _not_deleted(User))
-        .order_by(Result.created_at.desc())
+        .order_by(Result.created_at.desc(), Result.id.desc())
         .all()
     )
+    attempt_map = build_result_attempt_map(results)
 
     rows = [
         {
             "user": result.user,
+            "attempt_number": attempt_map[result.id]["attempt_number"],
+            "attempt_label": attempt_map[result.id]["attempt_label"],
             "obtained_marks": result.obtained_marks,
             "total_marks": result.total_marks,
             "percentage": result.percentage,
@@ -147,26 +168,34 @@ def get_test_report_detail(test_id):
         "summary": {
             "questions": test.total_questions,
             "total_marks": round(test.total_questions * test.marks_per_question, 2),
-            "users_attended": len(rows),
+            "attempts_count": len(rows),
+            "users_attended": len({row["user"].id for row in rows}),
             "highest_score": max((row["obtained_marks"] for row in rows), default=0),
         },
     }
 
 
 def get_user_report_detail(user_id):
-    user = User.query.filter(User.id == user_id, User.role == "user", _not_deleted(User)).first()
+    user = User.query.filter(
+        User.id == user_id,
+        User.role == "user",
+        _not_deleted(User),
+    ).first()
     if not user:
         raise ValueError("User report not found.")
 
     results = (
         Result.query.filter_by(user_id=user_id)
-        .order_by(Result.created_at.desc())
+        .order_by(Result.created_at.desc(), Result.id.desc())
         .all()
     )
+    attempt_map = build_result_attempt_map(results)
 
     rows = [
         {
             "test": result.mock_test,
+            "attempt_number": attempt_map[result.id]["attempt_number"],
+            "attempt_label": attempt_map[result.id]["attempt_label"],
             "questions": result.total_questions,
             "total_marks": result.total_marks,
             "obtained_marks": result.obtained_marks,

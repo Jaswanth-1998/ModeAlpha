@@ -11,6 +11,10 @@
     data-submit-url="{{ url_for('api.submit_attempt_api', attempt_id=attempt.id) }}"
     data-time-left="{{ remaining_seconds }}"
     data-question-id="{{ question.id }}"
+    data-total-questions="{{ total_questions }}"
+    data-resolved-count="{{ resolved_count }}"
+    data-unanswered-token="__UNANSWERED__"
+    data-current-resolution-state="{{ question_resolution_state }}"
 >
     <div class="row g-4">
         <div class="col-xl-8">
@@ -56,15 +60,24 @@
                             <a href="{{ url_for('tests.question_page', attempt_id=attempt.id, question_number=question_number + 1) }}" class="btn btn-brand js-save-before-nav">Next</a>
                         {% endif %}
 
+                        <button type="button" class="btn btn-light border js-mark-unanswered">Leave as Un-Answer</button>
+
                         <form method="post" action="{{ url_for('tests.pause_test', attempt_id=attempt.id) }}" class="js-pause-form" data-confirm-message="Pause this test now?">
                             <button type="submit" class="btn btn-outline-secondary">Pause Test</button>
                         </form>
 
-                        <form method="post" action="{{ url_for('tests.submit_test', attempt_id=attempt.id) }}" id="submitTestForm" data-confirm-message="Final submit this test? You will not be able to edit answers after submission.">
+                        <form method="post" action="{{ url_for('tests.submit_test', attempt_id=attempt.id) }}" id="submitTestForm" class="{% if not show_final_submit %}d-none{% endif %}" data-confirm-message="Final submit this test? You will not be able to edit answers after submission.">
                             <button type="submit" class="btn btn-success">Final Submit</button>
                         </form>
                     </div>
 
+                    <div class="small text-muted mt-3" id="submitReadinessNote">
+                        {% if show_final_submit %}
+                            All questions are resolved. You can now use Final Submit.
+                        {% else %}
+                            Final Submit appears only after every question is answered or marked as unanswered.
+                        {% endif %}
+                    </div>
                     <div class="small text-muted mt-3" id="autosaveStatus">Answers save automatically when you select an option.</div>
                 </div>
             </div>
