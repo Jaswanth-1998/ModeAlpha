@@ -22,11 +22,11 @@
                             <h3 class="h5 mb-1">{{ item.test.title }}</h3>
                             <p class="text-muted mb-0">{{ item.test.description }}</p>
                         </div>
-                        <span class="status-pill {{ 'approved' if item.result else 'pending' }}">
-                            {% if item.result %}
-                                Completed
-                            {% elif item.active_attempt %}
+                        <span class="status-pill {{ 'approved' if item.latest_result and not item.active_attempt else 'pending' }}">
+                            {% if item.active_attempt %}
                                 {{ "Paused" if item.active_attempt.status == "paused" else "In Progress" }}
+                            {% elif item.latest_result %}
+                                Completed
                             {% else %}
                                 Ready
                             {% endif %}
@@ -60,16 +60,33 @@
                     </div>
 
                     <div class="d-flex flex-wrap gap-2">
-                        {% if item.result %}
-                            <a href="{{ url_for('user.result_detail', result_id=item.result.id) }}" class="btn btn-outline-dark">View Result</a>
+                        {% if item.active_attempt %}
+                            <form method="post" action="{{ url_for('tests.start_test', test_id=item.test.id) }}" data-confirm-message="Resume this mock test now?">
+                                <button type="submit" class="btn btn-brand">Resume Test</button>
+                            </form>
+                        {% elif item.latest_result %}
+                            <a href="{{ url_for('user.result_detail', result_id=item.latest_result.id) }}" class="btn btn-outline-dark">View Result</a>
+                            <form method="post" action="{{ url_for('tests.start_test', test_id=item.test.id) }}" data-confirm-message="Start a new re-test for this mock test?">
+                                <button type="submit" class="btn btn-brand">Re-Test</button>
+                            </form>
                         {% else %}
-                            <form method="post" action="{{ url_for('tests.start_test', test_id=item.test.id) }}" data-confirm-message="{{ 'Resume this mock test now?' if item.active_attempt else 'Start this mock test now?' }}">
-                                <button type="submit" class="btn btn-brand">
-                                    {{ "Resume Test" if item.active_attempt else "Start Test" }}
-                                </button>
+                            <form method="post" action="{{ url_for('tests.start_test', test_id=item.test.id) }}" data-confirm-message="Start this mock test now?">
+                                <button type="submit" class="btn btn-brand">Start Test</button>
                             </form>
                         {% endif %}
+
+                        {% if item.active_attempt and item.latest_result %}
+                            <a href="{{ url_for('user.result_detail', result_id=item.latest_result.id) }}" class="btn btn-outline-dark">View Result</a>
+                        {% endif %}
                     </div>
+                    {% if item.completed_attempts_count %}
+                        <div class="small text-muted mt-3">
+                            {{ item.completed_attempts_count }} completed attempt{{ '' if item.completed_attempts_count == 1 else 's' }}
+                            {% if item.latest_attempt_label %}
+                                . Latest: {{ item.latest_attempt_label }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
                     {% if item.active_attempt and item.remaining_seconds is not none %}
                         <div class="small text-muted mt-3">
                             Remaining time:

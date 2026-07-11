@@ -10,8 +10,16 @@ from app.services.mock_test_service import (
 
 def start_test(test_id):
     try:
-        attempt, created, question_number = create_or_resume_attempt(g.current_user.id, test_id)
-        message = "Test started successfully." if created else "Resuming your existing attempt."
+        attempt, attempt_mode, question_number = create_or_resume_attempt(
+            g.current_user.id,
+            test_id,
+        )
+        if attempt_mode == "created":
+            message = "Test started successfully."
+        elif attempt_mode == "retest":
+            message = "Re-test started successfully."
+        else:
+            message = "Resuming your existing attempt."
         flash(message, "success")
         return redirect(
             url_for(
@@ -30,7 +38,11 @@ def question_page(attempt_id, question_number):
         context = get_attempt_question_context(attempt_id, g.current_user.id, question_number)
         return render_template("mock_tests/question.html", **context)
     except TimeoutError:
-        result = submit_attempt_for_user(attempt_id, g.current_user.id)
+        result = submit_attempt_for_user(
+            attempt_id,
+            g.current_user.id,
+            allow_incomplete=True,
+        )
         flash("Time is up. Your test has been submitted automatically.", "warning")
         return redirect(url_for("user.result_detail", result_id=result.id))
     except ValueError as exc:
@@ -54,7 +66,11 @@ def pause_test(attempt_id):
         flash("Test paused. Resume whenever you are ready.", "info")
         return redirect(url_for("user.tests"))
     except TimeoutError:
-        result = submit_attempt_for_user(attempt_id, g.current_user.id)
+        result = submit_attempt_for_user(
+            attempt_id,
+            g.current_user.id,
+            allow_incomplete=True,
+        )
         flash("Time is up. Your test has been submitted automatically.", "warning")
         return redirect(url_for("user.result_detail", result_id=result.id))
     except ValueError as exc:

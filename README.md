@@ -16,6 +16,8 @@ The project now includes admin and user workflows, approval-based login, pause/r
 - User test engine with one-question-per-page navigation
 - Autosave answers using AJAX
 - Pause and resume test attempts with remaining-time tracking
+- Re-test support using the existing `attempts` and `results` tables
+- Attempt-wise reporting such as `1st Attempt`, `2nd Attempt`
 - Question palette colors:
   - Green = answered
   - Red = visited but left blank
@@ -59,7 +61,7 @@ User can:
 - Login after approval
 - Edit profile and change password
 - View available tests
-- Start, pause, resume, and submit tests
+- Start, pause, resume, re-test, and submit tests
 - Review results and performance
 
 ## Current Test Engine Behavior
@@ -69,7 +71,8 @@ User can:
 - Answers are saved during navigation
 - Timer counts down during active attempts
 - Pause freezes the timer and allows later resume
-- Final submit shows a confirmation prompt
+- `Leave as Un-Answer` is available on every question
+- Final submit appears only after all questions are resolved
 - Question navigation box colors:
   - Answered: green
   - Visited and blank: red
@@ -305,6 +308,8 @@ The parser also supports common variations like:
 - Approved Users Report
 - User-wise Marks Report
 - Test-wise Report
+- Attempt labels inside drill-down report views
+- Unique user count in test-wise summaries even when the same user re-tests
 - Detailed per-user attended tests view
 - Detailed per-test attended users view
 
@@ -383,6 +388,22 @@ Detailed PostgreSQL setup notes are available in [POSTGRESQL_SETUP.md](POSTGRESQ
 - [Future Code Update and Database Update Guide](FUTURE_UPDATE_WORKFLOW.md)
 - [Commit Message Guide](COMMIT_MESSAGE_GUIDE.md)
 - [Professional Commit Message Templates](COMMIT_MESSAGE_TEMPLATES.md)
+
+## Recent Update Notes
+
+### 09 July 2026
+
+This update added:
+- Re-test support for completed tests
+- Attempt labels in user and admin reports
+- Unique-user counting in test-wise reports
+- `Leave as Un-Answer` handling in the question engine
+- Final submit visibility only after all questions are resolved
+
+Database note:
+- No new table was created
+- No migration was needed for this update
+- Existing `attempts.answers_json` and `results` data are reused for attempt tracking
 
 
 

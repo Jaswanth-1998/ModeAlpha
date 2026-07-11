@@ -176,5 +176,6 @@ Test in browser
 Check pgAdmin if database changed
 ```
 ***
-(Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned) ; (& c:\Users\HP\Documents\Codex\2026-05-22\ModeAlpha\.venv\Scripts\Activate.ps1)
+(Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned) ; 
+(& c:\Users\HP\Documents\Codex\2026-05-22\ModeAlpha\.venv\Scripts\Activate.ps1)
 ***
