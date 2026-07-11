@@ -6,11 +6,13 @@
     <div class="question-palette">
         {% for item in mock_test.questions %}
             {% set answered = item.id in answered_question_ids %}
+            {% set resolved = item.id in resolved_question_ids %}
             {% set visited = item.id in visited_question_ids %}
             <a
                 href="{{ url_for('tests.question_page', attempt_id=attempt.id, question_number=item.question_order) }}"
                 class="palette-item js-save-before-nav {% if question.id == item.id %}active{% endif %} {% if answered %}answered{% elif visited and question.id != item.id %}visited{% endif %}"
                 data-palette-question-id="{{ item.id }}"
+                data-resolution-state="{% if answered %}answered{% elif resolved %}resolved-unanswered{% else %}unresolved{% endif %}"
             >
                 {{ item.question_order }}
             </a>

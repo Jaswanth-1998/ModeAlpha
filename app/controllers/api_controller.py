@@ -82,7 +82,7 @@ def save_answer(attempt_id):
             {
                 "success": True,
                 "message": "Answer saved.",
-                "selected_option": saved_answer,
+                **saved_answer,
             }
         )
     except ValueError as exc:
@@ -91,7 +91,11 @@ def save_answer(attempt_id):
 
 def submit_attempt(attempt_id):
     try:
-        result = submit_attempt_for_user(attempt_id, g.current_user.id)
+        result = submit_attempt_for_user(
+            attempt_id,
+            g.current_user.id,
+            allow_incomplete=True,
+        )
         return jsonify(
             {
                 "success": True,

@@ -6,8 +6,15 @@ from app.models.mock_test import MockTest
 from app.models.question import Question
 from app.models.result import Result
 from app.utils.helpers import (
+    ANSWER_OPTIONS,
+    UNANSWERED_TOKEN,
+    build_result_attempt_map,
     calculate_elapsed_seconds,
     calculate_remaining_seconds,
+    format_attempt_label,
+    is_answered_option,
+    is_resolved_response,
+    is_unanswered_token,
     json_dump,
     json_load,
 )
@@ -23,11 +30,25 @@ def get_user_tests(user_id):
         .order_by(MockTest.created_at.desc())
         .all()
     )
-    results = Result.query.filter_by(user_id=user_id).all()
-    result_map = {result.mock_test_id: result for result in results}
+
+    results = (
+        Result.query.filter_by(user_id=user_id)
+        .order_by(Result.created_at.asc(), Result.id.asc())
+        .all()
+    )
+    result_attempt_map = build_result_attempt_map(results)
+
+    latest_result_map = {}
+    completed_attempt_count_map = {}
+    for result in results:
+        latest_result_map[result.mock_test_id] = result
+        completed_attempt_count_map[result.mock_test_id] = (
+            completed_attempt_count_map.get(result.mock_test_id, 0) + 1
+        )
+
     attempts = (
         Attempt.query.filter_by(user_id=user_id)
-        .order_by(Attempt.started_at.desc())
+        .order_by(Attempt.started_at.desc(), Attempt.id.desc())
         .all()
     )
     active_attempt_map = {}
@@ -36,19 +57,32 @@ def get_user_tests(user_id):
             continue
         active_attempt_map.setdefault(attempt.mock_test_id, attempt)
 
-    return [
-        {
-            "test": test,
-            "result": result_map.get(test.id),
-            "active_attempt": active_attempt_map.get(test.id),
-            "remaining_seconds": (
-                _get_attempt_remaining_seconds(active_attempt_map[test.id])
-                if test.id in active_attempt_map
-                else None
-            ),
-        }
-        for test in tests
-    ]
+    test_rows = []
+    for test in tests:
+        latest_result = latest_result_map.get(test.id)
+        latest_attempt_meta = (
+            result_attempt_map.get(latest_result.id, {})
+            if latest_result
+            else {}
+        )
+        active_attempt = active_attempt_map.get(test.id)
+
+        test_rows.append(
+            {
+                "test": test,
+                "latest_result": latest_result,
+                "completed_attempts_count": completed_attempt_count_map.get(test.id, 0),
+                "latest_attempt_label": latest_attempt_meta.get("attempt_label"),
+                "active_attempt": active_attempt,
+                "remaining_seconds": (
+                    _get_attempt_remaining_seconds(active_attempt)
+                    if active_attempt
+                    else None
+                ),
+            }
+        )
+
+    return test_rows
 
 
 def create_or_resume_attempt(user_id, test_id):
@@ -58,23 +92,34 @@ def create_or_resume_attempt(user_id, test_id):
     if test.total_questions == 0:
         raise ValueError("This test does not have questions yet.")
 
-    existing_result = Result.query.filter_by(user_id=user_id, mock_test_id=test_id).first()
-    if existing_result:
-        raise ValueError("You have already submitted this test.")
-
-    active_attempt = Attempt.query.filter_by(
-        user_id=user_id,
-        mock_test_id=test_id,
-    ).filter(Attempt.status.in_(["in_progress", "paused"])).order_by(Attempt.started_at.desc()).first()
+    active_attempt = (
+        Attempt.query.filter_by(
+            user_id=user_id,
+            mock_test_id=test_id,
+        )
+        .filter(Attempt.status.in_(["in_progress", "paused"]))
+        .order_by(Attempt.started_at.desc(), Attempt.id.desc())
+        .first()
+    )
     if active_attempt:
         if active_attempt.status == "paused":
             _resume_attempt(active_attempt)
-        return active_attempt, False, _get_resume_question_number(active_attempt)
+        return active_attempt, "resumed", _get_resume_question_number(active_attempt)
+
+    prior_attempts_count = (
+        Attempt.query.filter_by(
+            user_id=user_id,
+            mock_test_id=test_id,
+            status="submitted",
+        ).count()
+    )
 
     attempt = Attempt(user_id=user_id, mock_test_id=test_id)
     db.session.add(attempt)
     db.session.commit()
-    return attempt, True, 1
+
+    attempt_mode = "retest" if prior_attempts_count else "created"
+    return attempt, attempt_mode, 1
 
 
 def get_attempt_question_context(attempt_id, user_id, question_number):
@@ -104,8 +149,14 @@ def get_attempt_question_context(attempt_id, user_id, question_number):
     question = questions[question_number - 1]
     visited_question_ids = _mark_question_visited(attempt, question.id)
     answers = json_load(attempt.answers_json)
-    selected_option = answers.get(str(question.id))
-    answered_question_ids = {int(question_id) for question_id in answers.keys()}
+    current_value = answers.get(str(question.id))
+    answered_question_ids = _get_answered_question_ids(answers)
+    resolved_question_ids = _get_resolved_question_ids(answers)
+    unresolved_question_numbers = [
+        item.question_order
+        for item in questions
+        if item.id not in resolved_question_ids
+    ]
 
     return {
         "attempt": attempt,
@@ -113,11 +164,17 @@ def get_attempt_question_context(attempt_id, user_id, question_number):
         "question": question,
         "question_number": question_number,
         "total_questions": total_questions,
-        "selected_option": selected_option,
+        "selected_option": current_value if is_answered_option(current_value) else None,
+        "is_marked_unanswered": is_unanswered_token(current_value),
+        "question_resolution_state": _get_question_resolution_state(current_value),
         "answered_count": len(answered_question_ids),
+        "resolved_count": len(resolved_question_ids),
         "remaining_seconds": remaining_seconds,
         "answered_question_ids": answered_question_ids,
+        "resolved_question_ids": resolved_question_ids,
         "visited_question_ids": visited_question_ids,
+        "show_final_submit": len(resolved_question_ids) == total_questions,
+        "unresolved_question_numbers": unresolved_question_numbers,
     }
 
 
@@ -142,18 +199,36 @@ def save_answer_for_attempt(attempt_id, user_id, question_id, selected_option):
         raise ValueError("Question not found for this test.")
 
     answers = json_load(attempt.answers_json)
+    answer_key = str(question.id)
+    existing_value = answers.get(answer_key)
     cleaned_option = (selected_option or "").strip().upper()
 
-    if cleaned_option:
-        if cleaned_option not in {"A", "B", "C", "D"}:
+    if cleaned_option == UNANSWERED_TOKEN:
+        answers[answer_key] = UNANSWERED_TOKEN
+    elif cleaned_option:
+        if cleaned_option not in ANSWER_OPTIONS:
             raise ValueError("Invalid answer option.")
-        answers[str(question.id)] = cleaned_option
+        answers[answer_key] = cleaned_option
+    elif is_unanswered_token(existing_value):
+        answers[answer_key] = UNANSWERED_TOKEN
     else:
-        answers.pop(str(question.id), None)
+        answers.pop(answer_key, None)
 
     attempt.answers_json = json_dump(answers)
     db.session.commit()
-    return answers.get(str(question.id))
+
+    current_value = answers.get(answer_key)
+    answered_question_ids = _get_answered_question_ids(answers)
+    resolved_question_ids = _get_resolved_question_ids(answers)
+
+    return {
+        "selected_option": current_value if is_answered_option(current_value) else None,
+        "is_marked_unanswered": is_unanswered_token(current_value),
+        "resolution_state": _get_question_resolution_state(current_value),
+        "answered_count": len(answered_question_ids),
+        "resolved_count": len(resolved_question_ids),
+        "show_final_submit": len(resolved_question_ids) == len(attempt.mock_test.questions),
+    }
 
 
 def pause_attempt_for_user(attempt_id, user_id):
@@ -180,7 +255,7 @@ def pause_attempt_for_user(attempt_id, user_id):
     return attempt
 
 
-def submit_attempt_for_user(attempt_id, user_id):
+def submit_attempt_for_user(attempt_id, user_id, allow_incomplete=False):
     attempt = _get_attempt(attempt_id, user_id)
     if attempt.result:
         return attempt.result
@@ -189,6 +264,12 @@ def submit_attempt_for_user(attempt_id, user_id):
 
     answers = json_load(attempt.answers_json)
     questions = attempt.mock_test.questions
+    resolved_question_ids = _get_resolved_question_ids(answers)
+
+    if not allow_incomplete and len(resolved_question_ids) < len(questions):
+        raise ValueError(
+            "Answer or mark all questions as unanswered before final submit."
+        )
 
     correct = 0
     wrong = 0
@@ -196,7 +277,7 @@ def submit_attempt_for_user(attempt_id, user_id):
 
     for question in questions:
         selected_option = answers.get(str(question.id))
-        if not selected_option:
+        if not is_answered_option(selected_option):
             unanswered += 1
             continue
         if selected_option == question.correct_answer:
@@ -249,10 +330,19 @@ def get_user_results(user_id):
     results = (
         Result.query.filter_by(user_id=user_id)
         .join(MockTest, MockTest.id == Result.mock_test_id)
-        .order_by(Result.created_at.desc())
+        .order_by(Result.created_at.desc(), Result.id.desc())
         .all()
     )
-    return results
+    result_attempt_map = build_result_attempt_map(results)
+
+    return [
+        {
+            "result": result,
+            "attempt_number": result_attempt_map[result.id]["attempt_number"],
+            "attempt_label": result_attempt_map[result.id]["attempt_label"],
+        }
+        for result in results
+    ]
 
 
 def get_result_detail_for_user(result_id, user_id):
@@ -260,20 +350,41 @@ def get_result_detail_for_user(result_id, user_id):
     if not result:
         raise ValueError("Result not found.")
 
+    related_results = (
+        Result.query.filter_by(user_id=user_id, mock_test_id=result.mock_test_id)
+        .order_by(Result.created_at.asc(), Result.id.asc())
+        .all()
+    )
+    result_attempt_map = build_result_attempt_map(related_results)
+    current_attempt_meta = result_attempt_map.get(
+        result.id,
+        {
+            "attempt_number": 1,
+            "attempt_label": format_attempt_label(1),
+        },
+    )
+
     answers = json_load(result.attempt.answers_json)
     question_rows = []
     for question in result.mock_test.questions:
+        selected_value = answers.get(str(question.id))
         question_rows.append(
             {
                 "question_order": question.question_order,
                 "question_text": question.question_text,
-                "selected_option": answers.get(str(question.id), "-"),
+                "selected_option": (
+                    selected_value
+                    if is_answered_option(selected_value)
+                    else "Left Unanswered"
+                ),
                 "correct_answer": question.correct_answer,
             }
         )
 
     return {
         "result": result,
+        "attempt_number": current_attempt_meta["attempt_number"],
+        "attempt_label": current_attempt_meta["attempt_label"],
         "question_rows": question_rows,
     }
 
@@ -287,8 +398,9 @@ def _get_attempt(attempt_id, user_id):
 
 def _get_resume_question_number(attempt):
     answers = json_load(attempt.answers_json)
+    resolved_question_ids = _get_resolved_question_ids(answers)
     for question in attempt.mock_test.questions:
-        if str(question.id) not in answers:
+        if question.id not in resolved_question_ids:
             return question.question_order
 
     return len(attempt.mock_test.questions) or 1
@@ -329,3 +441,27 @@ def _load_visited_question_ids(attempt):
     except (TypeError, ValueError):
         pass
     return set()
+
+
+def _get_answered_question_ids(answers):
+    return {
+        int(question_id)
+        for question_id, selected_option in answers.items()
+        if is_answered_option(selected_option)
+    }
+
+
+def _get_resolved_question_ids(answers):
+    return {
+        int(question_id)
+        for question_id, selected_option in answers.items()
+        if is_resolved_response(selected_option)
+    }
+
+
+def _get_question_resolution_state(value):
+    if is_answered_option(value):
+        return "answered"
+    if is_unanswered_token(value):
+        return "resolved-unanswered"
+    return "unresolved"

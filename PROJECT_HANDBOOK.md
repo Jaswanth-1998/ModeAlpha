@@ -1856,3 +1856,59 @@ If you understand these 5 things well, you can build many Flask projects manuall
 5. step-by-step debugging habits
 
 This project is a good learning template because it is not just a working app, it also demonstrates how to organize a codebase so it stays maintainable as features grow.
+
+---
+
+## 40. Update Example: Re-Test and Attempt-Wise Reporting
+
+Date:
+- 09 July 2026
+
+This is a practical example of how a real feature update was done without adding a new table.
+
+### What changed
+
+- completed tests can now be taken again using `Re-Test`
+- reports now show labels like `1st Attempt`, `2nd Attempt`
+- test-wise summary keeps `No. of Users Attended` as unique users only
+- user-wise summary counts repeated attempts
+- each question can now be marked with `Leave as Un-Answer`
+- `Final Submit` appears only after every question is answered or explicitly marked unanswered
+
+### Which files were mainly involved
+
+- `app/services/mock_test_service.py`
+- `app/services/report_service.py`
+- `app/controllers/test_controller.py`
+- `app/controllers/api_controller.py`
+- `app/utils/helpers.py`
+- `app/static/js/test_engine.js`
+- `app/templates/mock_tests/question.html`
+- `app/templates/partials/question_palette.html`
+- `app/templates/user/test_list.html`
+- `app/templates/user/results.html`
+- `app/templates/user/result_detail.html`
+- `app/templates/admin/reports.html`
+- `app/templates/admin/test_report_detail.html`
+- `app/templates/admin/user_report_detail.html`
+
+### Why no migration was needed
+
+No schema change was required because:
+- submitted attempt history already existed in `results`
+- active and paused attempts already existed in `attempts`
+- question selections were already stored in `attempts.answers_json`
+
+The update only changed how the existing data is interpreted and displayed.
+
+### What to learn from this
+
+Not every feature needs a database migration.
+
+If the existing schema already stores enough information, you can:
+- update service logic
+- update controller messages
+- update templates
+- update JavaScript behavior
+
+and keep the database structure unchanged.

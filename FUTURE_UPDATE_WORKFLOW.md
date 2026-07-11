@@ -518,3 +518,102 @@ Commit and push
 - test end to end
 
 This gives a repeatable and beginner-friendly workflow for maintaining the project in future.
+
+## 14. Change Log Tutorial Entry
+
+### 09 July 2026 - Re-Test, Attempt Labels, and Question Resolution Flow
+
+This section explains a real update done in this project and how to repeat this style of work in future.
+
+### Functional changes added
+
+- completed tests now show a `Re-Test` action
+- each submitted result is labeled as `1st Attempt`, `2nd Attempt`, and so on
+- user result history shows attempt labels
+- admin test drill-down and user drill-down reports show attempt labels
+- test-wise summary now separates:
+  - total attempts
+  - unique users attended
+- each question now supports `Leave as Un-Answer`
+- `Final Submit` becomes visible only after all questions are resolved
+
+### Files involved in this update
+
+- `app/utils/helpers.py`
+  - added reusable helpers for unanswered markers and attempt label formatting
+- `app/services/mock_test_service.py`
+  - updated attempt creation, resume flow, answer saving, result preparation, and final-submit validation
+- `app/services/report_service.py`
+  - updated attempt counting and unique-user counting logic for reports
+- `app/controllers/test_controller.py`
+  - updated flash message handling for normal start, resume, and re-test
+- `app/controllers/api_controller.py`
+  - expanded JSON response from answer autosave API
+- `app/static/js/test_engine.js`
+  - updated autosave, unanswered-mark handling, palette status updates, and final-submit visibility
+- `app/templates/mock_tests/question.html`
+  - added unanswered button and final-submit note
+- `app/templates/partials/question_palette.html`
+  - updated palette state metadata
+- `app/templates/user/test_list.html`
+  - updated start/resume/re-test/result actions
+- `app/templates/user/results.html`
+  - added attempt column
+- `app/templates/user/result_detail.html`
+  - added attempt display
+- `app/templates/admin/reports.html`
+  - added attempts column in test-wise report
+- `app/templates/admin/test_report_detail.html`
+  - added attempt details and attempts summary
+- `app/templates/admin/user_report_detail.html`
+  - added attempt column
+
+### Was migration needed?
+
+No.
+
+Reason:
+- no new column
+- no new table
+- no changed relationship
+- no changed database constraint
+
+So the correct procedure for this type of update is:
+
+1. update services
+2. update controllers
+3. update templates and JavaScript
+4. run the app
+5. test in browser
+6. verify report output
+
+### If a similar future update needs a database change
+
+Use this procedure:
+
+1. update model files in `app/models/`
+2. update related service/controller/template files
+3. create migration:
+
+```powershell
+python -m flask --app run.py db migrate -m "Describe schema change"
+```
+
+4. review the new file inside `migrations/versions/`
+5. apply it:
+
+```powershell
+python -m flask --app run.py db upgrade
+```
+
+6. verify in pgAdmin
+7. run browser testing
+
+### Practical lesson from this update
+
+Before creating a migration, first ask:
+
+- is the database structure really changing?
+- or only the business logic and UI behavior are changing?
+
+If only logic/UI changes, migration is not needed.
